@@ -1,20 +1,23 @@
-import { Layout, List, Text } from "@ui-kitten/components";
-import { Fragment } from "react";
-import { Image } from "react-native";
-
 import { useThemeColor } from "@/hooks/use-theme-color";
 import {
   ImagesMessage,
   Message,
   TextMessage,
 } from "@/interfaces/chat.interfaces";
+import { Layout, List, Text } from "@ui-kitten/components";
+import { Fragment } from "react";
+import { Image } from "react-native";
+import Markdown from "react-native-markdown-display";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
 interface Props {
   messages: Message[];
+  isGeminiWriting: boolean;
 }
 
-export const ChatMessages = ({ messages }: Props) => {
+export const ChatMessages = ({ messages, isGeminiWriting }: Props) => {
   const primaryColor = useThemeColor({}, "icon");
+  const bgColor = useThemeColor({}, "background");
 
   return (
     <Layout style={{ flex: 1 }}>
@@ -40,6 +43,19 @@ export const ChatMessages = ({ messages }: Props) => {
           );
         }}
       />
+
+      {isGeminiWriting && (
+        <Animated.View
+          style={{
+            paddingHorizontal: 16,
+            paddingVertical: 10,
+            backgroundColor: bgColor,
+          }}
+          entering={FadeInDown}
+        >
+          <Text>Gemini está escribiendo...</Text>
+        </Animated.View>
+      )}
     </Layout>
   );
 };
@@ -52,6 +68,17 @@ const MessageItem = ({
   userColor: string;
 }) => {
   const isCurrentUser = message.sender === "user";
+  const markdownStyles = isCurrentUser
+    ? {
+        body: { color: "white" },
+        paragraph: { color: "white" },
+        text: { color: "white" },
+      }
+    : {
+        body: { color: "black" },
+        paragraph: { color: "black" },
+        text: { color: "black" },
+      };
 
   return (
     <Layout
@@ -68,7 +95,7 @@ const MessageItem = ({
       }}
     >
       <Text style={{ color: isCurrentUser ? "white" : "black" }}>
-        {message.text}
+        <Markdown style={markdownStyles}>{message.text}</Markdown>
       </Text>
     </Layout>
   );

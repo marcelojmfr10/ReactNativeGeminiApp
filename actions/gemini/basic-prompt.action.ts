@@ -7,5 +7,5 @@ export const getBasicPrompt = async (prompt: string): Promise<string> => {
     { responseType: "text" },
   );
 
-  return response.data;
+  return response.data.trim();
 };
