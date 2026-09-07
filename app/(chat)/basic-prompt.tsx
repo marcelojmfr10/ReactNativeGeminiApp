@@ -13,7 +13,7 @@ const BasicPromptScreen = () => {
 
       <CustomInputBox
         onSendMessage={(message, attachments) => {
-          addMessage(message);
+          addMessage(message, attachments);
         }}
       />
     </Layout>
