@@ -1,5 +1,6 @@
 import * as GeminiActions from "@/actions/gemini";
 import { FileType } from "@/actions/helpers/prompt-with-images";
+import { urlToImageFile } from "@/actions/helpers/url-to-image-file";
 import { ImagePickerAsset } from "expo-image-picker";
 import { create } from "zustand";
 
@@ -11,6 +12,7 @@ interface ImagePlaygroundState {
   previousPrompt: string;
   previousImages: (FileType | ImagePickerAsset)[];
   selectedStyle: string;
+  selectedImage: string;
 
   generateImage: (
     prompt: string,
@@ -18,6 +20,7 @@ interface ImagePlaygroundState {
   ) => Promise<void>;
   generateNextImage: () => Promise<void>;
   setSelectedStyle: (style: string) => void;
+  setSelectedImage: (imageUrl: string) => void;
 }
 
 export const usePlaygroundStore = create<ImagePlaygroundState>()(
@@ -29,11 +32,15 @@ export const usePlaygroundStore = create<ImagePlaygroundState>()(
     previousPrompt: "",
     previousImages: [],
     selectedStyle: "",
+    selectedImage: "",
 
     generateImage: async (
       prompt: string,
       images: (FileType | ImagePickerAsset)[],
     ): Promise<void> => {
+      const selectedStyle = get().selectedStyle;
+      const selectedImage = get().selectedImage;
+
       set({
         isGenerating: true,
         images: [],
@@ -41,7 +48,14 @@ export const usePlaygroundStore = create<ImagePlaygroundState>()(
         previousImages: images,
       });
 
-      // TODO: aplicar estilo seleccionado
+      if (selectedStyle !== "") {
+        prompt = `${prompt} con un estilo ${selectedStyle}`;
+      }
+
+      if (selectedImage !== "") {
+        const imageFile = await urlToImageFile(selectedImage);
+        images.push(imageFile);
+      }
 
       const { imageUrl } = await GeminiActions.getImageGeneration(
         prompt,
@@ -71,8 +85,11 @@ export const usePlaygroundStore = create<ImagePlaygroundState>()(
       const currentHistory = get().history;
       let previousPrompt = get().previousPrompt;
       const previousImages = get().previousImages;
+      const selectedStyle = get().selectedStyle;
 
-      // todo: aplicar estilo seleccionado
+      if (selectedStyle !== "") {
+        previousPrompt = `${previousPrompt} con un estilo ${selectedStyle}`;
+      }
 
       set({
         isGenerating: true,
@@ -104,6 +121,16 @@ export const usePlaygroundStore = create<ImagePlaygroundState>()(
 
       set({
         selectedStyle: style,
+      });
+    },
+    setSelectedImage: (imageUrl: string) => {
+      if (imageUrl === get().selectedImage) {
+        set({ selectedImage: "" });
+        return;
+      }
+
+      set({
+        selectedImage: imageUrl,
       });
     },
   }),
